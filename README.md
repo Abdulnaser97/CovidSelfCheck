@@ -5,7 +5,7 @@ Automation tool for UofT Ucheck daily COVID self-check.
 
 ## Usage
 
-Provide your UTORID and PWD to `cronCaller.js` run `node cronCaller`. This will complete the daily check-in at 12:01 AM everyday.
+Provide your UTORID and PWD in `UserDetails.js` then run `node cronCaller`. This will complete the daily check-in at 12:01 AM everyday.
 
 ## Wanna Chat?
 
