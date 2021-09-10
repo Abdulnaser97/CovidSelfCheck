@@ -2,6 +2,7 @@ const CovidSelfCheck = require("./CovidSelfCheck");
 const { switchOutputAudio, changeVolume } = require("./MacAudio");
 const { logToSheet } = require("./sheetUtils");
 const { openSheet } = require("./CovidSelfCheckCLIUtils");
+const UserDetails = require("./UserDetails");
 
 let properties = [
   {
@@ -39,9 +40,12 @@ async function CovidSelfCheckCLI(utor, p) {
     isChecked: "",
   };
 
+  const UTORID = utor ? utor : UserDetails.utor;
+  const PWD = p ? p : UserDetails.p;
+
   do {
     try {
-      const isChecked = await CovidSelfCheck(utor, p);
+      const isChecked = await CovidSelfCheck(UTORID, PWD);
 
       selfCheckSummary.isChecked = isChecked;
     } catch (e) {

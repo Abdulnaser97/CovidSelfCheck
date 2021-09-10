@@ -11,7 +11,7 @@ const {} = require("./Utils");
 const { utor, p } = require("./UserDetails");
 
 async function cronCaller() {
-  cmd = `1 0 * * * cd ${REPO_PATH} && /usr/local/bin/node ${SCRIPT} --utor=${utor} --p=${p} > /tmp/CovidSelfCheckCronLog.log`;
+  cmd = `1 0 * * * cd ${REPO_PATH} && /usr/local/bin/node ${SCRIPT} > /tmp/CovidSelfCheckCronLog.log`;
 
   const { stdout, stderr } = await exec(
     `(crontab -l 2>/dev/null; echo "${cmd}") | crontab -`
