@@ -47,42 +47,71 @@ async function selfCheck(driver, utor, p) {
   try {
     await Login(driver, utor, p);
 
-    await waitFor(driver, `.//*[text()[contains(.,'New Self-Assessment')]]`);
+    await Promise.race([
+      waitFor(driver, `.//*[text()[contains(.,'Start health screening')]]`),
+      waitFor(driver, `.//*[text()[contains(.,'New Self-Assessment')]]`),
+    ]);
 
     // Choose Time
-    let newSelfCheck = await getElement(
+    let newSelfCheck = await getElements(
       driver,
-      `.//*[text()[contains(.,'New Self-Assessment')]]`
+      `.//*[text()[contains(.,'Start health screening')]]`
     );
+
+    if (newSelfCheck.length === 0) {
+      newSelfCheck = await getElements(
+        driver,
+        `.//*[text()[contains(.,'New Self-Assessment')]]`
+      );
+    }
+
     await driver.sleep(2000);
-    await newSelfCheck.click();
+    await newSelfCheck[0].click();
 
-    let staleSubmitButton =
-      ".//button[@tabindex='-1']//span[text()[contains(.,'Submit')]]";
+    let submitButton = ".//button//span[text()[contains(.,'Submit')]]";
 
-    while (await IsDisplayed(await getElements(driver, staleSubmitButton))) {
+    //vaccinated
+
+    //.//div[contains(@class,'MuiCollapse-container') and .//*[text()[contains(., 'I am fully vaccinated')]]]/following-sibling::div[position()=1][contains(@class,'MuiCollapse-container')]//input[contains(@id,'yes')]
+    const fullyVaccinatedCard = `div[contains(@class,'MuiCollapse-container') and .//*[text()[contains(., 'I am fully vaccinated')]]]`;
+    const yesButton = `div[position()=1][contains(@class,'MuiCollapse-container')]//input[contains(@id,'yes')]/..//span`;
+
+    await waitFor(
+      driver,
+      `.//${fullyVaccinatedCard}/following-sibling::${yesButton}`
+    );
+
+    let yesButtons = await getElements(
+      driver,
+      `.//${fullyVaccinatedCard}/following-sibling::${yesButton}`
+    );
+
+    await yesButtons[0].click();
+
+    const otherCards = `.//div[contains(@class,'MuiCollapse-container') and not(.//*[text()[contains(., 'I am fully vaccinated')]])]`;
+    const ButtonsWrapper = `div[position()=1][contains(@class,'MuiCollapse-container') and .//input[contains(@id,'_yes')]]`;
+    const clicked = {};
+    do {
+      // Get the no button whose parent doesnot have an immediate preceding sibling with text I am fully vaccinated
       let NoButtons = await getElements(
         driver,
-        `.//label//span[text()[contains(.,'No')]]`
+        `${otherCards}/following-sibling::${ButtonsWrapper}//input[contains(@id,'no')]/..//span`
       );
 
       NoButtons.forEach(async (button) => {
-        if (!(await button.isSelected())) {
+        if (!clicked[button.getId()]) {
           await button.click();
+          clicked[await button.getId()] = 1;
         }
       });
-    }
 
-    await driver.sleep(1000);
-
-    const submitButton = await getElements(
-      driver,
-      ".//button//span[text()[contains(.,'Submit')]]"
-    );
-    await submitButton[0].click();
-
-    await driver.sleep(1000);
-
+      const submitButton = await getElements(
+        driver,
+        ".//button//span[text()[contains(.,'Submit')]]"
+      );
+      await submitButton[0].click();
+    } while (await IsDisplayed(await getElements(driver, submitButton)));
+    await driver.sleep(2000);
     return "YES";
   } catch (e) {
     console.log("ERROR in selfCheck()", e);
